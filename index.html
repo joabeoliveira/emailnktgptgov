@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorise Mailer | Micro SaaS</title>
+    <!-- Tailwind CSS (CDN para MVP rápido) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons (Ícones modernos e leves) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Configuração de cores do Tailwind (Opcional, para dar identidade) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            500: '#14b8a6', // Teal padrão (Mude para a cor da gptGOV)
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800 font-sans">
+
+    <!-- Sidebar Lateral -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <i class="ph ph-paper-plane-tilt text-3xl text-brand-500"></i>
+            <span class="text-xl font-bold tracking-tight">Algorise<span class="text-brand-500">Mailer</span></span>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <i class="ph ph-squares-four text-xl"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-500 text-white font-medium shadow-md">
+                <i class="ph ph-users text-xl"></i> Contatos
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <i class="ph ph-megaphone text-xl"></i> Campanhas
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700">
+            <div class="flex items-center gap-3 px-4 py-2">
+                <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center font-bold">A</div>
+                <div>
+                    <p class="text-sm font-medium">Admin</p>
+                    <p class="text-xs text-gray-400">Plano Pro</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Área Principal -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        <!-- Topbar Mobile (Aparece só em telas pequenas) -->
+        <header class="md:hidden bg-white shadow-sm p-4 flex justify-between items-center">
+            <span class="text-xl font-bold">AlgoriseMailer</span>
+            <button class="text-gray-600"><i class="ph ph-list text-2xl"></i></button>
+        </header>
+
+        <!-- Conteúdo Scrollável -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <!-- Header da Página -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestão de Contatos</h1>
+                    <p class="text-gray-500 text-sm mt-1">Gerencie sua audiência da gptGOV Academy.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors flex items-center gap-2">
+                        <i class="ph ph-user-plus text-lg"></i> Novo Manual
+                    </button>
+                    <button id="btnImportar" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                        <i class="ph ph-file-csv text-lg"></i> Importar Planilha
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <div class="relative w-64">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="Buscar contatos..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                    </div>
+                    <span class="text-sm text-gray-500">Total: <strong id="totalContatos">0</strong> contatos</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-medium">Nome</th>
+                                <th class="p-4 font-medium">E-mail</th>
+                                <th class="p-4 font-medium">Tags</th>
+                                <th class="p-4 font-medium">Status</th>
+                                <th class="p-4 font-medium text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaContatos" class="divide-y divide-gray-100 text-sm">
+                            <!-- Estado Vazio -->
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-gray-500">
+                                    <i class="ph ph-users-three text-4xl mb-3 text-gray-300 mx-auto"></i>
+                                    <p>Nenhum contato encontrado.</p>
+                                    <p class="text-xs mt-1">Importe uma planilha para começar.</p>
+                                </td>
+                            </tr>
+                            <!-- Exemplo de como ficará uma linha preenchida futuramente:
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-4 font-medium text-gray-900">João Silva</td>
+                                <td class="p-4 text-gray-600">joao.silva@prefeitura.gov.br</td>
+                                <td class="p-4"><span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">Prefeito</span></td>
+                                <td class="p-4"><span class="px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs flex items-center w-fit gap-1"><i class="ph ph-check-circle"></i> Ativo</span></td>
+                                <td class="p-4 text-right">
+                                    <button class="text-gray-400 hover:text-brand-500"><i class="ph ph-pencil-simple text-lg"></i></button>
+                                </td>
+                            </tr>
+                            -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

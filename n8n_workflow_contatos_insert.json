@@ -1,0 +1,116 @@
+{
+  "name": "Inserir contato via Webhook (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "inserir-contato",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "usuario_id",
+              "value": "={{ $json[\"usuario_id\"] || 1 }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "nome",
+              "value": "={{ $json[\"nome\"] }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json[\"email\"] }}"
+            },
+            {
+              "name": "tags",
+              "value": "={{ $json[\"tags\"] || '' }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $json[\"status\"] || 'ativo' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO contatos (usuario_id, nome, email, tags, status) VALUES ({{$json[\"usuario_id\"]}}, '{{ $json[\"nome\"] }}', '{{ $json[\"email\"] }}', '{{ $json[\"tags\"] }}', '{{ $json[\"status\"] }}') RETURNING id;"
+      },
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "postgres": {
+          "id": "",
+          "name": "Postgres Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "responseCode": 200,
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}
