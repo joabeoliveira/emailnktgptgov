@@ -1,0 +1,14 @@
+<div id="viewCampanhas">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Campanhas de E-mail</h1>
+            <p class="text-gray-500 text-sm mt-1">Crie e monitore seus disparos via Brevo.</p>
+        </div>
+        <button onclick="document.getElementById('modalNovaCampanha').classList.remove('hidden')" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+            <i class="ph ph-paper-plane text-lg"></i> Nova Campanha
+        </button>
+    </div>
+    <div id="gridCampanhas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full p-12 text-center text-gray-400">Nenhuma campanha criada ainda.</div>
+    </div>
+</div>
