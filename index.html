@@ -199,7 +199,38 @@ p{color:#4b5563;line-height:1.6}
             const campanhasConcluidasEl = document.getElementById('dashCampanhasConcluidas');
             const contatosRecentesEl = document.getElementById('dashContatosRecentes');
             const campanhasRecentesEl = document.getElementById('dashCampanhasRecentes');
+            const chartContatosEl = document.getElementById('dashChartContatos');
+            const chartCampanhasEl = document.getElementById('dashChartCampanhas');
             const statusEl = document.getElementById('dashStatus');
+
+            function renderStatusChart(container, counters, colors) {
+                if (!container) return;
+                const entries = Object.keys(counters).map(function(key) {
+                    return { key: key, value: counters[key] };
+                }).filter(function(item) { return item.value > 0; });
+
+                if (entries.length === 0) {
+                    container.innerHTML = '<p class="text-gray-400 text-sm">Sem dados para exibir.</p>';
+                    return;
+                }
+
+                const total = entries.reduce(function(sum, item) { return sum + item.value; }, 0);
+                container.innerHTML = '';
+
+                entries.sort(function(a, b) { return b.value - a.value; }).forEach(function(item) {
+                    const percent = Math.round((item.value / total) * 100);
+                    const row = document.createElement('div');
+                    row.innerHTML =
+                        '<div class="flex items-center justify-between mb-1">' +
+                            '<span class="text-xs uppercase tracking-wider text-gray-600">' + item.key + '</span>' +
+                            '<span class="text-xs font-semibold text-gray-700">' + item.value + ' (' + percent + '%)</span>' +
+                        '</div>' +
+                        '<div class="h-2.5 rounded-full bg-gray-100 overflow-hidden">' +
+                            '<div class="h-full rounded-full ' + (colors[item.key] || 'bg-brand-500') + '" style="width:' + percent + '%"></div>' +
+                        '</div>';
+                    container.appendChild(row);
+                });
+            }
 
             function renderContatosRecentes(contatos) {
                 if (!contatosRecentesEl) return;
@@ -250,6 +281,18 @@ p{color:#4b5563;line-height:1.6}
                 const totalCampanhas = campanhas.length;
                 const concluidas = campanhas.filter(function(c) { return c.status === 'concluido'; }).length;
 
+                const contatosPorStatus = contatos.reduce(function(acc, c) {
+                    const status = (c.status || 'ativo').toLowerCase();
+                    acc[status] = (acc[status] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const campanhasPorStatus = campanhas.reduce(function(acc, c) {
+                    const status = (c.status || 'rascunho').toLowerCase();
+                    acc[status] = (acc[status] || 0) + 1;
+                    return acc;
+                }, {});
+
                 if (totalContatosEl) totalContatosEl.textContent = String(totalContatos);
                 if (totalAtivosEl) totalAtivosEl.textContent = String(totalAtivos);
                 if (totalCampanhasEl) totalCampanhasEl.textContent = String(totalCampanhas);
@@ -257,6 +300,17 @@ p{color:#4b5563;line-height:1.6}
 
                 renderContatosRecentes(contatos);
                 renderCampanhasRecentes(campanhas);
+                renderStatusChart(chartContatosEl, contatosPorStatus, {
+                    ativo: 'bg-green-500',
+                    inativo: 'bg-gray-500',
+                    bloqueado: 'bg-red-500'
+                });
+                renderStatusChart(chartCampanhasEl, campanhasPorStatus, {
+                    concluido: 'bg-green-500',
+                    rascunho: 'bg-amber-500',
+                    enviando: 'bg-blue-500',
+                    erro: 'bg-red-500'
+                });
 
                 if (statusEl) {
                     if (results[0].status === 'fulfilled' && results[1].status === 'fulfilled') {
