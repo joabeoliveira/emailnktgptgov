@@ -1,3 +1,4 @@
 .vscode/mcp.json
 .env.local
 .env.local.sample
+.env
