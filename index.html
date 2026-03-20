@@ -171,7 +171,8 @@ p{color:#4b5563;line-height:1.6}
                 const res = await fetch(`src/views/${name}.html`);
                 if (!res.ok) throw new Error('Falha ao carregar view');
                 container.innerHTML = await res.text();
-                if (name === 'contatos' || name === 'dashboard') setupContatos();
+                if (name === 'contatos') setupContatos();
+                if (name === 'dashboard') setupDashboard();
                 if (name === 'campanhas') setupCampanhas();
                 updateNavActive(name);
             } catch (err) {
@@ -181,13 +182,102 @@ p{color:#4b5563;line-height:1.6}
         }
 
         function updateNavActive(name) {
-            const map = { linkDashboard: 'contatos', linkContatos: 'contatos', linkCampanhas: 'campanhas' };
+            const map = { linkDashboard: 'dashboard', linkContatos: 'contatos', linkCampanhas: 'campanhas' };
             Object.keys(map).forEach(function(k) {
                 const el = document.getElementById(k);
                 if (!el) return;
                 if (map[k] === name) el.className = 'flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-500 text-white font-medium shadow-md';
                 else el.className = 'flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors';
             });
+        }
+
+        // ------- Dashboard view setup -------
+        function setupDashboard() {
+            const totalContatosEl = document.getElementById('dashTotalContatos');
+            const totalAtivosEl = document.getElementById('dashContatosAtivos');
+            const totalCampanhasEl = document.getElementById('dashTotalCampanhas');
+            const campanhasConcluidasEl = document.getElementById('dashCampanhasConcluidas');
+            const contatosRecentesEl = document.getElementById('dashContatosRecentes');
+            const campanhasRecentesEl = document.getElementById('dashCampanhasRecentes');
+            const statusEl = document.getElementById('dashStatus');
+
+            function renderContatosRecentes(contatos) {
+                if (!contatosRecentesEl) return;
+                if (!contatos || contatos.length === 0) {
+                    contatosRecentesEl.innerHTML = '<li class="text-gray-400">Nenhum contato encontrado.</li>';
+                    return;
+                }
+                contatosRecentesEl.innerHTML = '';
+                contatos.slice(0, 5).forEach(function(c) {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0';
+                    const nome = c.nome || 'Sem nome';
+                    const email = c.email || '-';
+                    const status = c.status || 'ativo';
+                    li.innerHTML = '<div><p class="text-sm font-medium text-gray-900">' + nome + '</p><p class="text-xs text-gray-500">' + email + '</p></div><span class="text-[10px] uppercase font-bold px-2 py-1 rounded bg-brand-50 text-brand-500">' + status + '</span>';
+                    contatosRecentesEl.appendChild(li);
+                });
+            }
+
+            function renderCampanhasRecentes(campanhas) {
+                if (!campanhasRecentesEl) return;
+                if (!campanhas || campanhas.length === 0) {
+                    campanhasRecentesEl.innerHTML = '<li class="text-gray-400">Nenhuma campanha criada.</li>';
+                    return;
+                }
+                campanhasRecentesEl.innerHTML = '';
+                campanhas.slice(0, 5).forEach(function(c) {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0';
+                    const nome = c.nome || 'Sem nome';
+                    const assunto = c.assunto || '-';
+                    const status = c.status || 'rascunho';
+                    const statusClass = status === 'concluido' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700';
+                    li.innerHTML = '<div><p class="text-sm font-medium text-gray-900">' + nome + '</p><p class="text-xs text-gray-500">' + assunto + '</p></div><span class="text-[10px] uppercase font-bold px-2 py-1 rounded ' + statusClass + '">' + status + '</span>';
+                    campanhasRecentesEl.appendChild(li);
+                });
+            }
+
+            Promise.allSettled([
+                fetch(N8N_URLS.listarContatos).then(function(res) { if (!res.ok) throw new Error('contatos'); return res.json(); }),
+                fetch(N8N_URLS.listarCampanhas).then(function(res) { if (!res.ok) throw new Error('campanhas'); return res.json(); })
+            ]).then(function(results) {
+                const contatos = results[0].status === 'fulfilled' && Array.isArray(results[0].value) ? results[0].value : [];
+                const campanhas = results[1].status === 'fulfilled' && Array.isArray(results[1].value) ? results[1].value : [];
+
+                const totalContatos = contatos.length;
+                const totalAtivos = contatos.filter(function(c) { return (c.status || 'ativo') === 'ativo'; }).length;
+                const totalCampanhas = campanhas.length;
+                const concluidas = campanhas.filter(function(c) { return c.status === 'concluido'; }).length;
+
+                if (totalContatosEl) totalContatosEl.textContent = String(totalContatos);
+                if (totalAtivosEl) totalAtivosEl.textContent = String(totalAtivos);
+                if (totalCampanhasEl) totalCampanhasEl.textContent = String(totalCampanhas);
+                if (campanhasConcluidasEl) campanhasConcluidasEl.textContent = String(concluidas);
+
+                renderContatosRecentes(contatos);
+                renderCampanhasRecentes(campanhas);
+
+                if (statusEl) {
+                    if (results[0].status === 'fulfilled' && results[1].status === 'fulfilled') {
+                        statusEl.textContent = 'Dados atualizados com sucesso.';
+                        statusEl.className = 'text-xs text-green-600';
+                    } else {
+                        statusEl.textContent = 'Alguns dados não puderam ser carregados.';
+                        statusEl.className = 'text-xs text-orange-600';
+                    }
+                }
+            }).catch(function() {
+                if (statusEl) {
+                    statusEl.textContent = 'Erro ao carregar métricas do dashboard.';
+                    statusEl.className = 'text-xs text-red-600';
+                }
+            });
+
+            const btnIrContatos = document.getElementById('btnIrContatos');
+            const btnIrCampanhas = document.getElementById('btnIrCampanhas');
+            if (btnIrContatos) btnIrContatos.addEventListener('click', function() { loadView('contatos'); });
+            if (btnIrCampanhas) btnIrCampanhas.addEventListener('click', function() { loadView('campanhas'); });
         }
 
         // ------- Contatos view setup -------

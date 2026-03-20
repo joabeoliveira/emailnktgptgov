@@ -1,39 +1,58 @@
-<div id="viewDashboard">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+<div id="viewDashboard" class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p class="text-gray-500 text-sm mt-1">Visão geral da sua audiência da gptGOV Academy.</p>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard Operacional</h1>
+            <p class="text-gray-500 text-sm mt-1">Acompanhe contatos e campanhas em um só painel.</p>
         </div>
-        <div class="flex gap-3">
-            <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
-                <i class="ph ph-file-csv text-lg"></i> Importar Planilha
-            </button>
-            <input type="file" id="fileInput" accept=".csv" class="hidden">
+        <div class="flex gap-2">
+            <button id="btnIrContatos" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors">Gerir Contatos</button>
+            <button id="btnIrCampanhas" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors">Ir para Campanhas</button>
         </div>
     </div>
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <div class="relative w-64">
-                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" placeholder="Buscar contatos..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <p class="text-xs uppercase tracking-wider text-gray-500">Total de contatos</p>
+            <p id="dashTotalContatos" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <p class="text-xs uppercase tracking-wider text-gray-500">Contatos ativos</p>
+            <p id="dashContatosAtivos" class="text-3xl font-bold text-green-700 mt-2">0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <p class="text-xs uppercase tracking-wider text-gray-500">Campanhas criadas</p>
+            <p id="dashTotalCampanhas" class="text-3xl font-bold text-gray-900 mt-2">0</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <p class="text-xs uppercase tracking-wider text-gray-500">Campanhas concluídas</p>
+            <p id="dashCampanhasConcluidas" class="text-3xl font-bold text-brand-500 mt-2">0</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <section class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-gray-900">Contatos recentes</h2>
+                <span class="text-xs text-gray-400">Últimos 5</span>
             </div>
-            <span class="text-sm text-gray-500">Total: <strong id="totalContatos">0</strong> contatos</span>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                        <th class="p-4 font-medium">Nome</th>
-                        <th class="p-4 font-medium">E-mail</th>
-                        <th class="p-4 font-medium">Tags</th>
-                        <th class="p-4 font-medium">Status</th>
-                        <th class="p-4 font-medium text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaContatos" class="divide-y divide-gray-100 text-sm">
-                    <tr><td colspan="5" class="p-8 text-center text-gray-500">Nenhum contato encontrado.</td></tr>
-                </tbody>
-            </table>
-        </div>
+            <ul id="dashContatosRecentes" class="space-y-1">
+                <li class="text-gray-400">Carregando contatos...</li>
+            </ul>
+        </section>
+
+        <section class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-gray-900">Campanhas recentes</h2>
+                <span class="text-xs text-gray-400">Últimas 5</span>
+            </div>
+            <ul id="dashCampanhasRecentes" class="space-y-1">
+                <li class="text-gray-400">Carregando campanhas...</li>
+            </ul>
+        </section>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex items-center justify-between">
+        <p class="text-sm text-gray-600">Saúde da integração n8n</p>
+        <p id="dashStatus" class="text-xs text-gray-500">Atualizando...</p>
     </div>
 </div>
