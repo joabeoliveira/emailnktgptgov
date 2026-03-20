@@ -201,7 +201,17 @@ p{color:#4b5563;line-height:1.6}
             const campanhasRecentesEl = document.getElementById('dashCampanhasRecentes');
             const chartContatosEl = document.getElementById('dashChartContatos');
             const chartCampanhasEl = document.getElementById('dashChartCampanhas');
+            const updatedAtEl = document.getElementById('dashUpdatedAt');
             const statusEl = document.getElementById('dashStatus');
+
+            function setUpdatedAtNow() {
+                if (!updatedAtEl) return;
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                updatedAtEl.textContent = 'Última atualização: ' + hh + ':' + mm + ':' + ss;
+            }
 
             function renderStatusChart(container, counters, colors) {
                 if (!container) return;
@@ -321,11 +331,13 @@ p{color:#4b5563;line-height:1.6}
                         statusEl.className = 'text-xs text-orange-600';
                     }
                 }
+                setUpdatedAtNow();
             }).catch(function() {
                 if (statusEl) {
                     statusEl.textContent = 'Erro ao carregar métricas do dashboard.';
                     statusEl.className = 'text-xs text-red-600';
                 }
+                setUpdatedAtNow();
             });
 
             const btnIrContatos = document.getElementById('btnIrContatos');
