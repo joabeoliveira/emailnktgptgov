@@ -171,7 +171,7 @@ p{color:#4b5563;line-height:1.6}
                 const res = await fetch(`src/views/${name}.html`);
                 if (!res.ok) throw new Error('Falha ao carregar view');
                 container.innerHTML = await res.text();
-                if (name === 'contatos') setupContatos();
+                if (name === 'contatos' || name === 'dashboard') setupContatos();
                 if (name === 'campanhas') setupCampanhas();
                 updateNavActive(name);
             } catch (err) {
@@ -345,11 +345,11 @@ p{color:#4b5563;line-height:1.6}
         }
 
         // Navegação: ligar links para carregar views
-        const navMap = { linkDashboard: 'contatos', linkContatos: 'contatos', linkCampanhas: 'campanhas' };
+        const navMap = { linkDashboard: 'dashboard', linkContatos: 'contatos', linkCampanhas: 'campanhas' };
         Object.keys(navMap).forEach(function(id) { const el = document.getElementById(id); if (!el) return; el.addEventListener('click', function(e) { e.preventDefault(); loadView(navMap[id]); }); });
 
         // Carrega view inicial
-        loadView('contatos');
+        loadView('dashboard');
     </script>
 </body>
 </html>

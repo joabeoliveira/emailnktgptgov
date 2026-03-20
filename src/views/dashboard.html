@@ -1,0 +1,39 @@
+<div id="viewDashboard">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p class="text-gray-500 text-sm mt-1">Visão geral da sua audiência da gptGOV Academy.</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                <i class="ph ph-file-csv text-lg"></i> Importar Planilha
+            </button>
+            <input type="file" id="fileInput" accept=".csv" class="hidden">
+        </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div class="relative w-64">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" placeholder="Buscar contatos..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+            <span class="text-sm text-gray-500">Total: <strong id="totalContatos">0</strong> contatos</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                        <th class="p-4 font-medium">Nome</th>
+                        <th class="p-4 font-medium">E-mail</th>
+                        <th class="p-4 font-medium">Tags</th>
+                        <th class="p-4 font-medium">Status</th>
+                        <th class="p-4 font-medium text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaContatos" class="divide-y divide-gray-100 text-sm">
+                    <tr><td colspan="5" class="p-8 text-center text-gray-500">Nenhum contato encontrado.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
