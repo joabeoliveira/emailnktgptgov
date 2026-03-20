@@ -1,0 +1,40 @@
+{
+  "name": "CRUD Unificado CRM (Contatos, Grupos, Campanhas)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crm",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook CRM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH input AS ( SELECT '{{ JSON.stringify($json.body || $json).replace(/''/g, '''''') }}'::jsonb AS b ), p AS ( SELECT lower(coalesce(b->>'entidade', '')) AS entidade, lower(coalesce(b->>'acao', '')) AS acao, coalesce((b->>'usuario_id')::int, 1) AS usuario_id, coalesce(b->'dados', '{}'::jsonb) AS dados FROM input ), op_grupo_create AS ( INSERT INTO grupos (usuario_id, nome, descricao) SELECT p.usuario_id, p.dados->>'nome', nullif(p.dados->>'descricao', '') FROM p WHERE p.entidade = 'grupo' AND p.acao = 'create' RETURNING to_jsonb(grupos.*) AS data ), op_grupo_list AS ( SELECT coalesce(jsonb_agg(to_jsonb(g) ORDER BY g.created_at DESC), '[]'::jsonb) AS data FROM grupos g CROSS JOIN p WHERE p.entidade = 'grupo' AND p.acao = 'list' AND g.usuario_id = p.usuario_id ), op_grupo_update AS ( UPDATE grupos g SET nome = coalesce(nullif(p.dados->>'nome', ''), g.nome), descricao = coalesce(p.dados->>'descricao', g.descricao) FROM p WHERE p.entidade = 'grupo' AND p.acao = 'update' AND g.id = nullif(p.dados->>'id', '')::int AND g.usuario_id = p.usuario_id RETURNING to_jsonb(g.*) AS data ), op_grupo_delete AS ( DELETE FROM grupos g USING p WHERE p.entidade = 'grupo' AND p.acao = 'delete' AND g.id = nullif(p.dados->>'id', '')::int AND g.usuario_id = p.usuario_id RETURNING to_jsonb(g.*) AS data ), op_contato_create AS ( INSERT INTO contatos (usuario_id, nome, email, tags, status) SELECT p.usuario_id, p.dados->>'nome', p.dados->>'email', coalesce(p.dados->>'tags', ''), coalesce(nullif(p.dados->>'status', ''), 'ativo') FROM p WHERE p.entidade = 'contato' AND p.acao = 'create' ON CONFLICT (usuario_id, email) DO UPDATE SET nome = EXCLUDED.nome, tags = EXCLUDED.tags, status = EXCLUDED.status RETURNING to_jsonb(contatos.*) AS data ), op_contato_list AS ( SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.created_at DESC), '[]'::jsonb) AS data FROM ( SELECT c.id, c.usuario_id, c.nome, c.email, c.tags, c.status, c.created_at, coalesce(jsonb_agg(cg.grupo_id) FILTER (WHERE cg.grupo_id IS NOT NULL), '[]'::jsonb) AS grupos FROM contatos c LEFT JOIN contato_grupos cg ON cg.contato_id = c.id CROSS JOIN p WHERE p.entidade = 'contato' AND p.acao = 'list' AND c.usuario_id = p.usuario_id GROUP BY c.id, c.usuario_id, c.nome, c.email, c.tags, c.status, c.created_at ) x ), op_contato_update AS ( UPDATE contatos c SET nome = coalesce(nullif(p.dados->>'nome', ''), c.nome), email = coalesce(nullif(p.dados->>'email', ''), c.email), tags = coalesce(p.dados->>'tags', c.tags), status = coalesce(nullif(p.dados->>'status', ''), c.status) FROM p WHERE p.entidade = 'contato' AND p.acao = 'update' AND c.id = nullif(p.dados->>'id', '')::int AND c.usuario_id = p.usuario_id RETURNING to_jsonb(c.*) AS data ), op_contato_delete AS ( DELETE FROM contatos c USING p WHERE p.entidade = 'contato' AND p.acao = 'delete' AND c.id = nullif(p.dados->>'id', '')::int AND c.usuario_id = p.usuario_id RETURNING to_jsonb(c.*) AS data ), op_campanha_create AS ( INSERT INTO campanhas (usuario_id, nome, assunto, corpo_html, status, grupo_id) SELECT p.usuario_id, p.dados->>'nome', p.dados->>'assunto', p.dados->>'corpo_html', coalesce(nullif(p.dados->>'status', ''), 'rascunho'), nullif(p.dados->>'grupo_id', '')::int FROM p WHERE p.entidade = 'campanha' AND p.acao = 'create' RETURNING to_jsonb(campanhas.*) AS data ), op_campanha_list AS ( SELECT coalesce(jsonb_agg(to_jsonb(c) ORDER BY c.created_at DESC), '[]'::jsonb) AS data FROM campanhas c CROSS JOIN p WHERE p.entidade = 'campanha' AND p.acao = 'list' AND c.usuario_id = p.usuario_id ), op_campanha_update AS ( UPDATE campanhas c SET nome = coalesce(nullif(p.dados->>'nome', ''), c.nome), assunto = coalesce(nullif(p.dados->>'assunto', ''), c.assunto), corpo_html = coalesce(p.dados->>'corpo_html', c.corpo_html), status = coalesce(nullif(p.dados->>'status', ''), c.status), grupo_id = coalesce(nullif(p.dados->>'grupo_id', '')::int, c.grupo_id) FROM p WHERE p.entidade = 'campanha' AND p.acao = 'update' AND c.id = nullif(p.dados->>'id', '')::int AND c.usuario_id = p.usuario_id RETURNING to_jsonb(c.*) AS data ), op_campanha_delete AS ( DELETE FROM campanhas c USING p WHERE p.entidade = 'campanha' AND p.acao = 'delete' AND c.id = nullif(p.dados->>'id', '')::int AND c.usuario_id = p.usuario_id RETURNING to_jsonb(c.*) AS data ), op_vinculo_create AS ( SELECT jsonb_build_object('contato_id', v.contato_id, 'grupo_id', v.grupo_id) AS data FROM p JOIN LATERAL ( INSERT INTO contato_grupos (contato_id, grupo_id) VALUES (nullif(p.dados->>'contato_id', '')::int, nullif(p.dados->>'grupo_id', '')::int) ON CONFLICT (contato_id, grupo_id) DO UPDATE SET contato_id = EXCLUDED.contato_id RETURNING contato_id, grupo_id ) v ON true WHERE p.entidade = 'vinculo' AND p.acao = 'create' ), op_vinculo_delete AS ( SELECT jsonb_build_object('deleted', count(*)) AS data FROM ( DELETE FROM contato_grupos cg USING p WHERE p.entidade = 'vinculo' AND p.acao = 'delete' AND cg.contato_id = nullif(p.dados->>'contato_id', '')::int AND cg.grupo_id = nullif(p.dados->>'grupo_id', '')::int RETURNING 1 ) d ), op_vinculo_list AS ( SELECT coalesce(jsonb_agg(to_jsonb(cg)), '[]'::jsonb) AS data FROM contato_grupos cg CROSS JOIN p WHERE p.entidade = 'vinculo' AND p.acao = 'list' AND (p.dados ? 'grupo_id' IS FALSE OR cg.grupo_id = nullif(p.dados->>'grupo_id', '')::int) AND (p.dados ? 'contato_id' IS FALSE OR cg.contato_id = nullif(p.dados->>'contato_id', '')::int) ), result AS ( SELECT 'ok'::text AS status, 'grupo'::text AS entidade, 'create'::text AS acao, data, 'Grupo criado'::text AS message FROM op_grupo_create UNION ALL SELECT 'ok', 'grupo', 'list', data, 'Lista de grupos' FROM op_grupo_list UNION ALL SELECT 'ok', 'grupo', 'update', data, 'Grupo atualizado' FROM op_grupo_update UNION ALL SELECT 'ok', 'grupo', 'delete', data, 'Grupo removido' FROM op_grupo_delete UNION ALL SELECT 'ok', 'contato', 'create', data, 'Contato criado/atualizado' FROM op_contato_create UNION ALL SELECT 'ok', 'contato', 'list', data, 'Lista de contatos' FROM op_contato_list UNION ALL SELECT 'ok', 'contato', 'update', data, 'Contato atualizado' FROM op_contato_update UNION ALL SELECT 'ok', 'contato', 'delete', data, 'Contato removido' FROM op_contato_delete UNION ALL SELECT 'ok', 'campanha', 'create', data, 'Campanha criada' FROM op_campanha_create UNION ALL SELECT 'ok', 'campanha', 'list', data, 'Lista de campanhas' FROM op_campanha_list UNION ALL SELECT 'ok', 'campanha', 'update', data, 'Campanha atualizada' FROM op_campanha_update UNION ALL SELECT 'ok', 'campanha', 'delete', data, 'Campanha removida' FROM op_campanha_delete UNION ALL SELECT 'ok', 'vinculo', 'create', data, 'Vinculo criado' FROM op_vinculo_create UNION ALL SELECT 'ok', 'vinculo', 'delete', data, 'Vinculo removido' FROM op_vinculo_delete UNION ALL SELECT 'ok', 'vinculo', 'list', data, 'Lista de vinculos' FROM op_vinculo_list ), fallback AS ( SELECT 'error'::text AS status, p.entidade, p.acao, null::jsonb AS data, 'Operacao invalida ou sem resultado'::text AS message FROM p WHERE NOT EXISTS (SELECT 1 FROM result) ) SELECT jsonb_build_object('status', r.status, 'entidade', r.entidade, 'acao', r.acao, 'message', r.message, 'data', coalesce(r.data, 'null'::jsonb)) AS response FROM (SELECT * FROM result UNION ALL SELECT * FROM fallback) r LIMIT 1;"
+      },
+      "name": "Postgres CRUD",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [560, 300]
+    }
+  ],
+  "connections": {
+    "Webhook CRM": {
+      "main": [
+        [
+          {
+            "node": "Postgres CRUD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

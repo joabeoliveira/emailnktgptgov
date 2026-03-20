@@ -5,6 +5,13 @@ Aqui está o rastreamento em tempo real do desenvolvimento deste Micro SaaS.
 ## 📊 Status Geral: `OPERACIONAL` ✅ (Em Produção)
 O sistema já é capaz de gerenciar contatos, criar rascunhos de e-mail marketing e disparar envios personalizados via Brevo.
 
+## 🆕 Atualizações Recentes (20/03/2026)
+- [x] Dashboard separado por views (`dashboard`, `contatos`, `campanhas`) com carregamento dinâmico.
+- [x] Dashboard operacional com métricas, listas recentes e mini gráficos por status.
+- [x] Timestamp de última atualização dos dados no dashboard.
+- [x] Workflow n8n unificado de CRUD criado em `workflows/crud_unificado_grupos.json`.
+- [x] Migração de grupos/listas criada em `workflows/migracao_grupos.sql`.
+
 ---
 
 ## ✅ Entregas Concluídas (Fase 1)
@@ -36,13 +43,13 @@ O sistema já é capaz de gerenciar contatos, criar rascunhos de e-mail marketin
     - [ ] Mudar status do contato para "Inativo" se houver Hard Bounce ou Unsubscribe.
 
 ### **Fase 3: CRUD & Flexibilidade 🛠️**
-- [ ] **Excluir Contato:** Botão na tabela para remoção manual.
-- [ ] **Excluir Campanha:** Botão no card para apagar rascunhos não enviados.
-- [ ] **Edição:** Possibilidade de editar o nome ou e-mail de um contato.
+- [x] **Backend CRUD unificado (n8n):** Operações de `create/list/update/delete` para `contato`, `grupo`, `campanha` e `vinculo` via `POST /crm`.
+- [ ] **UI de CRUD no Frontend:** Botões e formulários para criar/editar/excluir no painel.
+- [ ] **Envio por Grupo:** Atualizar workflow de disparo para filtrar contatos por `campanhas.grupo_id`.
 
 ### **Fase 4: Experiência & Segurança 🔒**
 - [ ] **Proteção de Acesso:** Implementar tela inicial de Login.
 - [ ] **Banners Dinâmicos:** Usar IA para criar imagens de cabeçalho nos e-mails.
 
 ---
-*Última atualização: 19/03/2026 às 23:02.*
+*Última atualização: 20/03/2026 às 14:30.*
