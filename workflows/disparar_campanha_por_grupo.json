@@ -1,0 +1,440 @@
+{
+  "name": "Disparar campanha por grupo (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "disparar-campanha",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook Disparar",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, usuario_id, nome, assunto, corpo_html, status, grupo_id FROM campanhas WHERE id = {{ $json.body.campanha_id }} AND usuario_id = {{ $json.body.usuario_id }} LIMIT 1;"
+      },
+      "name": "Buscar Campanha",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ String($json.grupo_id || '') }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "IF Campanha Tem Grupo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE campanhas SET status = 'processando' WHERE id = {{ $(\"Buscar Campanha\").first().json.id }} RETURNING id, status;"
+      },
+      "name": "Marcar Campanha Processando",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [930, 200],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.nome, c.email, c.tags, c.status FROM contatos c JOIN contato_grupos cg ON cg.contato_id = c.id WHERE c.usuario_id = {{ $(\"Buscar Campanha\").first().json.usuario_id }} AND c.status = 'ativo' AND cg.grupo_id = {{ $(\"Buscar Campanha\").first().json.grupo_id }} ORDER BY c.id ASC;"
+      },
+      "name": "Buscar Contatos do Grupo",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1160, 200],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Split em Contatos",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1390, 200]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "number": [
+            {
+              "name": "contato_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "campanha_id",
+              "value": "={{ $(\"Buscar Campanha\").first().json.id }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "nome",
+              "value": "={{ $json.nome || '' }}"
+            },
+            {
+              "name": "assunto",
+              "value": "={{ $(\"Buscar Campanha\").first().json.assunto }}"
+            },
+            {
+              "name": "htmlContent",
+              "value": "={{ $(\"Buscar Campanha\").first().json.corpo_html.replace(/{{\\s*nome\\s*}}/g, $json.nome || '') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Preparar Envio",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1620, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "={{ $env.BREVO_API_KEY }}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { sender: { email: 'no-reply@algorisemailer.local', name: 'AlgoriseMailer' }, to: [{ email: $json.email, name: $json.nome }], subject: $json.assunto, htmlContent: $json.htmlContent } }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "name": "Enviar via Brevo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.statusCode >= 200 && $json.statusCode < 300 }}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "name": "IF Envio OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2080, 200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_envio (campanha_id, contato_id, status) VALUES ({{ $item(0).$node[\"Preparar Envio\"].json.campanha_id }}, {{ $item(0).$node[\"Preparar Envio\"].json.contato_id }}, 'enviado');"
+      },
+      "name": "Log Enviado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [2310, 140],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO logs_envio (campanha_id, contato_id, status) VALUES ({{ $item(0).$node[\"Preparar Envio\"].json.campanha_id }}, {{ $item(0).$node[\"Preparar Envio\"].json.contato_id }}, 'falha');"
+      },
+      "name": "Log Falha",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [2310, 260],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE campanhas SET status = 'concluido' WHERE id = {{ $(\"Buscar Campanha\").first().json.id }} RETURNING id, status;"
+      },
+      "name": "Marcar Campanha Concluida",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1620, 430],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ok', message: 'Disparo por grupo finalizado', campanha_id: $(\"Buscar Campanha\").first().json.id } }}",
+        "options": {}
+      },
+      "name": "Resposta Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 430]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE campanhas SET status = 'rascunho' WHERE id = {{ $(\"Buscar Campanha\").first().json.id }} RETURNING id, status;"
+      },
+      "name": "Reverter Sem Grupo",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [930, 400],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', message: 'Campanha sem grupo_id definido. Defina um grupo antes de disparar.' } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "name": "Resposta Erro Sem Grupo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1160, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Disparar": {
+      "main": [
+        [
+          {
+            "node": "Buscar Campanha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Campanha": {
+      "main": [
+        [
+          {
+            "node": "IF Campanha Tem Grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Campanha Tem Grupo": {
+      "main": [
+        [
+          {
+            "node": "Marcar Campanha Processando",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reverter Sem Grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Campanha Processando": {
+      "main": [
+        [
+          {
+            "node": "Buscar Contatos do Grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Contatos do Grupo": {
+      "main": [
+        [
+          {
+            "node": "Split em Contatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split em Contatos": {
+      "main": [
+        [
+          {
+            "node": "Preparar Envio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar Campanha Concluida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Envio": {
+      "main": [
+        [
+          {
+            "node": "Enviar via Brevo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar via Brevo": {
+      "main": [
+        [
+          {
+            "node": "IF Envio OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Envio OK": {
+      "main": [
+        [
+          {
+            "node": "Log Enviado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Falha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Enviado": {
+      "main": [
+        [
+          {
+            "node": "Split em Contatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Falha": {
+      "main": [
+        [
+          {
+            "node": "Split em Contatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Campanha Concluida": {
+      "main": [
+        [
+          {
+            "node": "Resposta Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reverter Sem Grupo": {
+      "main": [
+        [
+          {
+            "node": "Resposta Erro Sem Grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}
