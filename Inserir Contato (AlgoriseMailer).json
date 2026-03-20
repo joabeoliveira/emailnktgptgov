@@ -1,0 +1,69 @@
+{
+  "name": "Inserir Contato (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inserir-campanha",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d758e314-ff54-4760-90b9-b7bba801afbe",
+      "name": "Webhook",
+      "webhookId": "42433266-8666-48b9-8ee7-942e71b6f523"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO contatos (usuario_id, nome, email, tags, status)\nVALUES ({{ $json.body.usuario_id }}, '{{ $json.body.nome }}', '{{ $json.body.email }}', '{{ $json.body.tags }}', '{{ $json.body.status }}')\nRETURNING id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "97ba9b8d-48f7-4339-88ea-09ae0db5eeeb",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bbff4b68-42f4-4790-899d-63bd7d025ab6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0435f3002e081a7fea4f6b9d9fb69e6d66a9ce283c409f889ee2eb8cc504ae5a"
+  },
+  "id": "dFWuJ6Gn8lV6Z1g2",
+  "tags": []
+}

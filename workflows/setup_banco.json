@@ -1,0 +1,33 @@
+{
+  "name": "Setup Banco (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS usuarios (\n    id SERIAL PRIMARY KEY,\n    nome VARCHAR(255) NOT NULL,\n    email VARCHAR(255) UNIQUE NOT NULL,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE IF NOT EXISTS contatos (\n    id SERIAL PRIMARY KEY,\n    usuario_id INTEGER,\n    nome VARCHAR(255),\n    email VARCHAR(255) NOT NULL,\n    tags VARCHAR(255),\n    status VARCHAR(50) DEFAULT 'ativo',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    UNIQUE(usuario_id, email)\n);\n\nCREATE TABLE IF NOT EXISTS campanhas (\n    id SERIAL PRIMARY KEY,\n    usuario_id INTEGER,\n    nome VARCHAR(255) NOT NULL,\n    assunto VARCHAR(255) NOT NULL,\n    corpo_html TEXT NOT NULL,\n    status VARCHAR(50) DEFAULT 'rascunho',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\n-- Inserir usuário padrão se não existir\nINSERT INTO usuarios (id, nome, email) \nVALUES (1, 'Usuário Administrador', 'admin@algorisemailer.com')\nON CONFLICT (id) DO NOTHING;"
+      },
+      "name": "Criar Tabelas",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [500, 300],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [[{ "node": "Criar Tabelas", "type": "main", "index": 0 }]]
+    }
+  }
+}

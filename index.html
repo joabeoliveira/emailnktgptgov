@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Algorise Mailer | Micro SaaS</title>
-    <!-- Tailwind CSS (CDN para MVP rápido) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Phosphor Icons (Ícones modernos e leves) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
-    <!-- Configuração de cores do Tailwind (Opcional, para dar identidade) -->
     <script>
         tailwind.config = {
             theme: {
@@ -17,7 +13,7 @@
                     colors: {
                         brand: {
                             50: '#f0fdfa',
-                            500: '#14b8a6', // Teal padrão (Mude para a cor da gptGOV)
+                            500: '#14b8a6',
                             900: '#134e4a',
                         }
                     }
@@ -28,25 +24,23 @@
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800 font-sans">
 
-    <!-- Sidebar Lateral -->
+    <!-- Sidebar -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
         <div class="p-6 flex items-center gap-3">
             <i class="ph ph-paper-plane-tilt text-3xl text-brand-500"></i>
             <span class="text-xl font-bold tracking-tight">Algorise<span class="text-brand-500">Mailer</span></span>
         </div>
-        
         <nav class="flex-1 px-4 space-y-2 mt-4">
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
+            <a href="#" id="linkDashboard" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
                 <i class="ph ph-squares-four text-xl"></i> Dashboard
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-500 text-white font-medium shadow-md">
+            <a href="#" id="linkContatos" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-500 text-white font-medium shadow-md">
                 <i class="ph ph-users text-xl"></i> Contatos
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
+            <a href="#" id="linkCampanhas" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors">
                 <i class="ph ph-megaphone text-xl"></i> Campanhas
             </a>
         </nav>
-
         <div class="p-4 border-t border-slate-700">
             <div class="flex items-center gap-3 px-4 py-2">
                 <div class="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center font-bold">A</div>
@@ -58,79 +52,389 @@
         </div>
     </aside>
 
-    <!-- Área Principal -->
+    <!-- Main -->
     <main class="flex-1 flex flex-col h-full overflow-hidden">
-        <!-- Topbar Mobile (Aparece só em telas pequenas) -->
         <header class="md:hidden bg-white shadow-sm p-4 flex justify-between items-center">
             <span class="text-xl font-bold">AlgoriseMailer</span>
             <button class="text-gray-600"><i class="ph ph-list text-2xl"></i></button>
         </header>
 
-        <!-- Conteúdo Scrollável -->
         <div class="flex-1 overflow-y-auto p-8">
-            <!-- Header da Página -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Gestão de Contatos</h1>
-                    <p class="text-gray-500 text-sm mt-1">Gerencie sua audiência da gptGOV Academy.</p>
+
+            <!-- View Contatos -->
+            <div id="viewContatos">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Gestão de Contatos</h1>
+                        <p class="text-gray-500 text-sm mt-1">Gerencie sua audiência da gptGOV Academy.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                            <i class="ph ph-file-csv text-lg"></i> Importar Planilha
+                        </button>
+                        <input type="file" id="fileInput" accept=".csv" class="hidden">
+                    </div>
                 </div>
-                <div class="flex gap-3">
-                    <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors flex items-center gap-2">
-                        <i class="ph ph-user-plus text-lg"></i> Novo Manual
-                    </button>
-                    <button id="btnImportar" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
-                        <i class="ph ph-file-csv text-lg"></i> Importar Planilha
-                    </button>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <div class="relative w-64">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" placeholder="Buscar contatos..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <span class="text-sm text-gray-500">Total: <strong id="totalContatos">0</strong> contatos</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                    <th class="p-4 font-medium">Nome</th>
+                                    <th class="p-4 font-medium">E-mail</th>
+                                    <th class="p-4 font-medium">Tags</th>
+                                    <th class="p-4 font-medium">Status</th>
+                                    <th class="p-4 font-medium text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaContatos" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="5" class="p-8 text-center text-gray-500">Nenhum contato encontrado.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabela Card -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <div class="relative w-64">
-                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" placeholder="Buscar contatos..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            <!-- View Campanhas -->
+            <div id="viewCampanhas" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Campanhas de E-mail</h1>
+                        <p class="text-gray-500 text-sm mt-1">Crie e monitore seus disparos via Brevo.</p>
                     </div>
-                    <span class="text-sm text-gray-500">Total: <strong id="totalContatos">0</strong> contatos</span>
+                    <button onclick="document.getElementById('modalNovaCampanha').classList.remove('hidden')" class="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                        <i class="ph ph-paper-plane text-lg"></i> Nova Campanha
+                    </button>
                 </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                <th class="p-4 font-medium">Nome</th>
-                                <th class="p-4 font-medium">E-mail</th>
-                                <th class="p-4 font-medium">Tags</th>
-                                <th class="p-4 font-medium">Status</th>
-                                <th class="p-4 font-medium text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaContatos" class="divide-y divide-gray-100 text-sm">
-                            <!-- Estado Vazio -->
-                            <tr>
-                                <td colspan="5" class="p-8 text-center text-gray-500">
-                                    <i class="ph ph-users-three text-4xl mb-3 text-gray-300 mx-auto"></i>
-                                    <p>Nenhum contato encontrado.</p>
-                                    <p class="text-xs mt-1">Importe uma planilha para começar.</p>
-                                </td>
-                            </tr>
-                            <!-- Exemplo de como ficará uma linha preenchida futuramente:
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="p-4 font-medium text-gray-900">João Silva</td>
-                                <td class="p-4 text-gray-600">joao.silva@prefeitura.gov.br</td>
-                                <td class="p-4"><span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs">Prefeito</span></td>
-                                <td class="p-4"><span class="px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs flex items-center w-fit gap-1"><i class="ph ph-check-circle"></i> Ativo</span></td>
-                                <td class="p-4 text-right">
-                                    <button class="text-gray-400 hover:text-brand-500"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                </td>
-                            </tr>
-                            -->
-                        </tbody>
-                    </table>
+                <div id="gridCampanhas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full p-12 text-center text-gray-400">Nenhuma campanha criada ainda.</div>
                 </div>
             </div>
+
         </div>
     </main>
 
+    <!-- Modal Nova Campanha -->
+    <div id="modalNovaCampanha" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold">Nova Campanha</h3>
+                <button onclick="document.getElementById('modalNovaCampanha').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+            <form id="formCampanha" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome Interno</label>
+                    <input type="text" id="campanha_nome" placeholder="Ex: Lançamento gptGOV" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Assunto do E-mail</label>
+                    <input type="text" id="campanha_assunto" placeholder="O assunto que o cliente verá" class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500" required>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-sm font-medium text-gray-700">Conteúdo (HTML)</label>
+                        <div class="relative">
+                            <select id="selectTemplate" class="text-xs bg-brand-50 text-brand-500 pl-2 pr-6 py-1 rounded hover:bg-brand-100 transition-colors appearance-none cursor-pointer border border-brand-500/20 outline-none">
+                                <option value="">-- Escolher Template --</option>
+                                <option value="gptgov_academy">gptGOV Academy</option>
+                            </select>
+                            <i class="ph ph-caret-down absolute right-1.5 top-1/2 -translate-y-1/2 text-brand-500 text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <textarea rows="8" id="campanha_corpo" placeholder="Cole seu HTML aqui ou escolha um template acima..." class="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm" required></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="document.getElementById('modalNovaCampanha').classList.add('hidden')" class="px-6 py-2 text-gray-600">Cancelar</button>
+                    <button type="submit" id="btnSalvar" class="px-6 py-2 bg-brand-500 text-white rounded-lg hover:bg-teal-600 transition-colors">Salvar Rascunho</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Import -->
+    <div id="modalImport" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-80 text-center">
+            <i class="ph ph-circle-notch animate-spin text-4xl text-brand-500 mb-4 mx-auto block"></i>
+            <p class="font-medium">Processando...</p>
+        </div>
+    </div>
+
+    <!-- Templates armazenados fora do script JS -->
+    <script id="tpl_gptgov_academy" type="text/html"><!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:sans-serif;background:#f4f7f6;margin:0;padding:0}
+.wrap{max-width:600px;margin:20px auto;background:#fff;border-radius:8px;overflow:hidden}
+.cnt{padding:30px}
+h1{color:#0d9488;font-size:24px}
+p{color:#4b5563;line-height:1.6}
+.cta{display:inline-block;background:#0d9488;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;margin-top:20px;font-weight:bold}
+.ft{padding:20px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #eee}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="cnt">
+<h1>Olá, {{nome}}! 🚀</h1>
+<p>Você gasta horas em tarefas repetitivas? O serviço público não precisa ser sinônimo de burocracia lenta.</p>
+<p>Na <b>gptGOV Academy</b>, ensinamos servidores como você a usar IA e automações para ganhar tempo e produtividade.</p>
+<ul style="list-style:none;padding:0">
+<li style="margin-bottom:10px;color:#374151">✓ Redução de 40% no tempo de tarefas</li>
+<li style="margin-bottom:10px;color:#374151">✓ Ferramentas modernas sem programar</li>
+<li style="margin-bottom:10px;color:#374151">✓ Rede de servidores inovadores</li>
+</ul>
+<a href="https://gptgov.com.br/academy" class="cta">Quero Otimizar Meu Tempo</a>
+</div>
+<div class="ft">Atenciosamente, <b>Equipe gptGOV</b></div>
+</div>
+</body>
+</html></script>
+
+    <!-- Script Principal -->
+    <script>
+        var N8N_URLS = {
+            inserir: 'https://n8n-n8n.yg64ke.easypanel.host/webhook/inserir-contato',
+            listarContatos: 'https://n8n-n8n.yg64ke.easypanel.host/webhook/listar-contatos',
+            criarCampanha: 'https://n8n-n8n.yg64ke.easypanel.host/webhook/criar-campanha',
+            listarCampanhas: 'https://n8n-n8n.yg64ke.easypanel.host/webhook/listar-campanhas',
+            dispararCampanha: 'https://n8n-n8n.yg64ke.easypanel.host/webhook/disparar-campanha'
+        };
+        var USUARIO_ID = 1;
+
+        // Mapeamento de templates: value do select -> { scriptId, nome, assunto }
+        var TEMPLATE_MAP = {
+            'gptgov_academy': {
+                scriptId: 'tpl_gptgov_academy',
+                nome: 'Divulgação gptGOV Academy',
+                assunto: '🚀 Ganhe 4 horas do seu dia com a gptGOV Academy'
+            }
+            // Adicione novos templates aqui:
+            // 'novo_template': { scriptId: 'tpl_novo_template', nome: '...', assunto: '...' }
+        };
+
+        var fileInput = document.getElementById('fileInput');
+        var tabelaContatos = document.getElementById('tabelaContatos');
+        var totalContatosEl = document.getElementById('totalContatos');
+
+        // Seletor de template (dropdown)
+        document.getElementById('selectTemplate').addEventListener('change', function() {
+            var key = this.value;
+            if (!key || !TEMPLATE_MAP[key]) return;
+            var tpl = TEMPLATE_MAP[key];
+            var el = document.getElementById(tpl.scriptId);
+            if (el) {
+                document.getElementById('campanha_corpo').value = el.innerHTML;
+                document.getElementById('campanha_nome').value = tpl.nome;
+                document.getElementById('campanha_assunto').value = tpl.assunto;
+            }
+            this.value = ''; // reset dropdown
+        });
+
+        // CSV Upload
+        fileInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(event) { processCSV(event.target.result); };
+            reader.readAsText(file);
+        });
+
+        function processCSV(csv) {
+            var lines = csv.split(/\r?\n/).filter(function(l) { return l.trim() !== ''; });
+            var modal = document.getElementById('modalImport');
+            modal.classList.remove('hidden');
+            var sucessos = 0;
+            var i = 1;
+
+            function enviarProximo() {
+                if (i >= lines.length) {
+                    modal.classList.add('hidden');
+                    atualizarContagem();
+                    if (sucessos > 0) alert(sucessos + ' contatos importados!');
+                    else alert('Nenhum contato importado. Verifique o CSV.');
+                    fileInput.value = '';
+                    return;
+                }
+                var row = lines[i].split(/[,;]/);
+                i++;
+                if (row.length >= 2) {
+                    var nome = row[0].replace(/["']/g, '').trim();
+                    var email = row[1].replace(/["']/g, '').trim();
+                    var tags = row[2] ? row[2].replace(/["']/g, '').trim() : 'importado-csv';
+                    if (email.indexOf('@') > -1) {
+                        var contato = { nome: nome, email: email, usuario_id: USUARIO_ID, tags: tags, status: 'ativo' };
+                        fetch(N8N_URLS.inserir, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(contato)
+                        }).then(function(res) {
+                            if (res.ok) { sucessos++; addLinhaTabela(contato); }
+                            enviarProximo();
+                        }).catch(function() { enviarProximo(); });
+                        return;
+                    }
+                }
+                enviarProximo();
+            }
+            enviarProximo();
+        }
+
+        function addLinhaTabela(contato) {
+            if (tabelaContatos.innerText.indexOf('Nenhum contato') > -1) tabelaContatos.innerHTML = '';
+            var tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 border-b border-gray-100';
+            var td1 = document.createElement('td'); td1.className = 'p-4 font-medium text-gray-900'; td1.textContent = contato.nome;
+            var td2 = document.createElement('td'); td2.className = 'p-4 text-gray-600'; td2.textContent = contato.email;
+            var td3 = document.createElement('td'); td3.className = 'p-4';
+            var span = document.createElement('span'); span.className = 'bg-brand-50 text-brand-500 px-2 py-1 rounded text-xs'; span.textContent = contato.tags;
+            td3.appendChild(span);
+            var td4 = document.createElement('td'); td4.className = 'p-4'; td4.innerHTML = '<span class="text-green-700 text-xs">Ativo</span>';
+            var td5 = document.createElement('td'); td5.className = 'p-4 text-right'; td5.textContent = '...';
+            tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4); tr.appendChild(td5);
+            tabelaContatos.appendChild(tr);
+        }
+
+        function atualizarContagem() {
+            totalContatosEl.textContent = tabelaContatos.querySelectorAll('tr').length;
+        }
+
+        function carregarContatos() {
+            fetch(N8N_URLS.listarContatos).then(function(res) {
+                if (res.ok) return res.json(); else throw new Error();
+            }).then(function(data) {
+                tabelaContatos.innerHTML = '';
+                if (data && data.length > 0) { data.forEach(function(c) { addLinhaTabela(c); }); }
+                atualizarContagem();
+            }).catch(function() {});
+        }
+
+        async function dispararCampanha(campanhaId) {
+            if (!confirm("Deseja disparar esta campanha agora para TODOS os contatos ativos?")) return;
+
+            try {
+                const response = await fetch(N8N_URLS.dispararCampanha, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ campanha_id: campanhaId, usuario_id: USUARIO_ID })
+                });
+
+                if (response.ok) {
+                    alert("Campanha enviada para a fila de disparo!");
+                    carregarCampanhas();
+                } else {
+                    alert("Erro ao disparar campanha. Verifique o workflow no n8n.");
+                }
+            } catch (error) {
+                console.error("Erro no disparo:", error);
+                alert("Falha na conexão com o servidor de disparo.");
+            }
+        }
+
+        function carregarCampanhas() {
+            var grid = document.getElementById('gridCampanhas');
+            fetch(N8N_URLS.listarCampanhas).then(function(res) {
+                if (res.ok) return res.json(); else throw new Error();
+            }).then(function(data) {
+                if (data && data.length > 0) {
+                    grid.innerHTML = '';
+                    data.forEach(function(c) {
+                        var div = document.createElement('div');
+                        div.className = 'bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow';
+                        
+                        var h4 = document.createElement('h4'); h4.className = 'font-bold text-gray-900'; h4.textContent = c.nome;
+                        var p = document.createElement('p'); p.className = 'text-sm text-gray-500 mt-2'; p.textContent = c.assunto;
+                        
+                        var footer = document.createElement('div');
+                        footer.className = 'flex justify-between items-center mt-4 pt-4 border-t border-gray-50';
+                        
+                        var status = document.createElement('span');
+                        status.className = `text-[10px] uppercase font-bold px-2 py-0.5 rounded ${c.status === 'concluido' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`;
+                        status.textContent = c.status || 'rascunho';
+
+                        var btn = document.createElement('button');
+                        btn.className = `text-sm font-bold ${c.status === 'concluido' ? 'text-gray-400 cursor-not-allowed' : 'text-brand-500 hover:text-teal-600'}`;
+                        btn.textContent = c.status === 'concluido' ? 'Enviada' : 'Enviar Agora';
+                        if (c.status !== 'concluido') {
+                            btn.onclick = function() { dispararCampanha(c.id); };
+                        }
+
+                        footer.appendChild(status);
+                        footer.appendChild(btn);
+                        
+                        div.appendChild(h4);
+                        div.appendChild(p);
+                        div.appendChild(footer);
+                        grid.appendChild(div);
+                    });
+                }
+            }).catch(function() {});
+        }
+
+        // Salvar campanha
+        document.getElementById('formCampanha').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('btnSalvar');
+            btn.textContent = 'Salvando...';
+            btn.disabled = true;
+
+            var payload = {
+                usuario_id: USUARIO_ID,
+                nome: document.getElementById('campanha_nome').value,
+                assunto: document.getElementById('campanha_assunto').value,
+                corpo_html: document.getElementById('campanha_corpo').value,
+                status: 'rascunho'
+            };
+
+            fetch(N8N_URLS.criarCampanha, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(res) {
+                if (res.ok) {
+                    alert('Campanha salva como rascunho!');
+                    document.getElementById('modalNovaCampanha').classList.add('hidden');
+                    document.getElementById('formCampanha').reset();
+                    carregarCampanhas();
+                } else {
+                    return res.text().then(function(t) { alert('Erro: ' + t); });
+                }
+            }).catch(function(err) {
+                alert('Falha na conexão: ' + err.message);
+            }).finally(function() {
+                btn.textContent = 'Salvar Rascunho';
+                btn.disabled = false;
+            });
+        });
+
+        // Navegação
+        var navLinks = { linkDashboard: 'viewContatos', linkContatos: 'viewContatos', linkCampanhas: 'viewCampanhas' };
+        Object.keys(navLinks).forEach(function(id) {
+            document.getElementById(id).addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('viewContatos').classList.add('hidden');
+                document.getElementById('viewCampanhas').classList.add('hidden');
+                document.getElementById(navLinks[id]).classList.remove('hidden');
+                Object.keys(navLinks).forEach(function(k) {
+                    document.getElementById(k).className = 'flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition-colors';
+                });
+                document.getElementById(id).className = 'flex items-center gap-3 px-4 py-3 rounded-lg bg-brand-500 text-white font-medium shadow-md';
+            });
+        });
+
+        carregarContatos();
+        carregarCampanhas();
+    </script>
 </body>
 </html>

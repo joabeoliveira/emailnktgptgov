@@ -1,0 +1,38 @@
+{
+  "name": "Listar campanhas (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "listar-campanhas",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, assunto, status, created_at FROM campanhas ORDER BY created_at DESC;"
+      },
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [520, 300],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Postgres", "type": "main", "index": 0 }]]
+    }
+  }
+}

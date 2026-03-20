@@ -1,0 +1,38 @@
+{
+  "name": "Inserir contato (AlgoriseMailer)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inserir-contato",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO contatos (usuario_id, nome, email, tags, status) VALUES ({{ $json.body.usuario_id }}, '{{ $json.body.nome }}', '{{ $json.body.email }}', '{{ $json.body.tags }}', '{{ $json.body.status }}') RETURNING id;"
+      },
+      "name": "Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [520, 300],
+      "credentials": {
+        "postgres": {
+          "id": "f32jiKhQPoGlRtvx",
+          "name": "postgres hfb_leitos"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Postgres", "type": "main", "index": 0 }]]
+    }
+  }
+}
